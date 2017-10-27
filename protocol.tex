@@ -1,8 +1,192 @@
 \section{Protocol} \label{sec:protocol}
 
+\subsection{Normal Case} \label{sec:normal}
+\xxx's consensus protocol has three main elements. 
+First, a \paxos consensus log. Second, threads of a server program running on 
+the leader host (or \emph{leader threads}). \xxx hooks the inbound socket calls 
+(\eg, \recv) of these leader threads and invoke consensus requests on these 
+calls. We denote the data received from each of these calls as a consensus 
+request (\ie, an entry in the consensus log). Third, a \xxx internal thread 
+running on every backup (or \emph{backup threads}), which agrees on consensus 
+requests. The \xxx leader enables the first and second elements, and backups 
+enable the first and third elements.
+
+\begin{figure}[h]
+\begin{minipage}{3in}
+\lgrindfile{code/logentry.cpp}
+\end{minipage}
+\caption{{\em \xxx's log entry for each socket call.}}
+\label{fig:logentry}
+\end{figure}
+
+Figure~\ref{fig:logentry} depicts the format of a log entry in \xxx's consensus 
+log. Most fields are the same as those in a typical \paxos 
+protocol~\cite{paxos:practical} except three: the \v{reply} array, 
+\v{conn\_vs}, and \v{call\_type}. 
+The \v{reply} array is a piece of memory on the leader side, preserved for
+backups to do RDMA WRITEs for their consensus replies. 
+%is for backups to do RDMA WRITEs for their 
+%consensus replies on the leader. 
+The \v{conn\_vs} is for identifying
+which TCP connection this socket call belongs to (see \S\ref{sec:concurrent}). 
+The \v{call\_type} identifies different types of socket calls (\eg, the \accept 
+type and the \recv type) for the entry.
+
+% Second, leader thread behavior on \recv(). Return from orig recv, grab 
+% spin % lock and get view stamp, store the log, and post send to all replicas. 
+% Non blocking. Wait % for over half agree, and then execute the operation.
+Figure~\ref{fig:consensus} shows \xxx's consensus protocol. Suppose a leader 
+thread invokes a consensus request when it calls a socket call \recv. This 
+thread's consensus request has four steps. The first step (\textbf{L1}, not 
+shown in Figure~\ref{fig:consensus}) is executing the actual socket call, 
+because the thread needs to get the received data and returned value, to 
+allocate a distinct log entry, and to replicate the entry in backups' consensus 
+logs.
+
+The second step (\textbf{L2}) is local preparation, including assigning a 
+viewstamp (a totally-ordered \paxos consensus request 
+ID~\cite{paxos:practical}) 
+for this entry in the consensus log, allocating a distinct entry in the log, 
+and 
+storing the entry to a local storage. We denote the time 
+taken on storing an entry as $t_{SSD}$. 
+% without allowing gaps (\ig, newer 
+% entries reach consensus but ).
+
+Third, each leader thread concurrently invokes a consensus via the third step 
+(\textbf{L3}): WRITE the log entry to remote backups. This step is thread-safe 
+because each leader thread works on its own distinct entry and remote backups' 
+corresponding entries. An \textbf{L3} WRITE returns quickly after 
+pushing the entry to its local QP connecting the leader and each backup. We 
+denote the time taken for this push as $t_{PUSH}$, which took at most 0.2\us in 
+our evaluation. $t_{PUSH}$ is serial for concurrently arriving requests 
+on each QP, but the WRITEs (all \textbf{L3} arrows in 
+Figure~\ref{fig:logentry}) to different QPs run in parallel.
+
+The fourth step (\textbf{L4}) is that the leader thread polls on its 
+\v{reply} field in its local log entry to wait for backups' consensus replies. 
+It breaks the poll if a number of heartbeats fail 
+(\S\ref{sec:election}). If a majority of replicas agrees on the entry, an input 
+consensus is reached, the 
+leader thread leaves this \recv call and proceeds with its program logic.
+
 \begin{figure*}[ht]
 \begin{center}
 \includegraphics{figures/consensus}
 \caption{\em \xxx consensus algorithm in normal case.}\label{fig:consensus}
 \end{center}
 \end{figure*}
+
+On each backup, a backup thread polls from the latest unagreed log entry. It 
+breaks the poll if a number of heartbeats fail 
+(\S\ref{sec:election}). 
+If no heartbeat fails, the backup thread then agrees on entries in the same 
+total order as those on the leader's consensus log, using three steps. First 
+(\textbf{B1}), it does a regular \paxos view ID check~\cite{paxos:practical} to 
+see whether the leader's view ID matches its own one, it then stores the log 
+entry in its local SSD. To scale to concurrently arriving requests, the backup 
+thread scans multiple entries it agrees with at once. It then stores them 
+in \xxx's parallel storage.
+
+Second (\textbf{B2}), on each entry the backup agrees, the backup thread does 
+an RDMA WRITE to send back a consensus reply to the \v{reply} array element in 
+the leader's corresponding entry. Third (\textbf{B3}, not shown 
+in Figure~\ref{fig:consensus}), the backup thread does a regular \paxos 
+check~\cite{paxos:practical} on \v{last\_committed} and to know the latest 
+entry that has reached consensus. It then ``executes" the committed entries by 
+forwarding the data in these entries to the server program on its local 
+replica. Carrying latest committed entries in next consensus requests is a 
+common, efficient \paxos implementation method~\cite{paxos:practical}.
+
+To ensure \paxos safety, the backup thread agrees on log 
+entries in order without allowing any gap~\cite{paxos:practical}. If the 
+backup suspects it misses some log entries (\eg, because of packet loss),
+it invokes a learning request to the leader asking for the 
+missing entries.
+
+\subsection{Atomic Message Delivery} \label{sec:atomic}
+
+% One key issue, check integrity. Strawmen approach, check viewstamp first.
+On a backup side, one tricky challenge is that atomicity must be 
+ensured on the leader's RDMA WRITEs on all entries and backups' polls. For 
+instance, while a leader thread is doing a WRITE on \v{vs} to a remote backup, 
+the backup's thread may be reading \v{vs} concurrently, causing a 
+corrupted read value.
+
+To address this challenge, one prior 
+approach~\cite{farm:nsdi14,herd:sigcomm14} 
+leverages the left-to-right ordering of RDMA WRITEs and puts a special 
+non-zero variable at the end of a fix-sized log entry because they mainly 
+handle key-value stores with fixed value length. As long as this variable is 
+non-zero, the RDMA WRITE ordering guarantees that the log entry WRITE is 
+complete. However, because \xxx aims to support general server programs with 
+largely variant received data lengths, this approach cannot be applied in \xxx.
+
+Another approach is using atomic primitives provided by RDMA hardware, 
+but a prior evaluation~\cite{drtm:sosp15} has shown that RDMA atomic 
+primitives are much slower than normal RDMA WRITEs and local memory reads.
+
+\xxx tackles this challenge by using the leader to add a canary value after 
+the \v{data} array. A backup thread always first checks the canary value 
+according to \v{data\_size} and then starts a standard \paxos consensus 
+reply decision~\cite{paxos:practical}. This synchronization-free approach 
+ensures that a \xxx backup thread always reads a complete entry efficiently.
+
+\subsection{Handling Concurrent Connections} \label{sec:concurrent}
+
+Unlike traditional \paxos protocols which mainly handle single-threaded 
+programs due to the deterministic execution assumption in \smr, \xxx aims 
+to support both single-threaded as well as multi-threaded or -processed 
+programs running on multi-core machines. Therefore, a strongly consistent 
+mechanism is needed to map each connection on the leader and 
+its corresponding connection on backups. A naive approach is matching a 
+leader connection's socket descriptor to the same one on a backup, but programs 
+on backups may return nondeterministic descriptors due to systems resource 
+contention.
+
+Fortunately, \paxos already makes viewstamps~\cite{paxos:practical} of 
+requests (log entries) strongly consistent across replicas. For TCP 
+connections, \xxx adds the \v{conn\_vs} field, the viewstamp of the the first 
+socket call in each connection (\ie, \accept) as the connection ID for log 
+entries.
+
+\subsection{Leader Election} \label{sec:election}
+
+Leader election on RDMA raises a main challenge: because backups do not 
+communicate with each other in normal case, a backup proposing itself as 
+the new leader does not know the remote memory locations where the other 
+backups are polling. Writing to a wrong remote memory location may cause the 
+other backups to miss all leader election messages. A recent 
+system~\cite{dare:hpdc15} establishes an extra control QP to handle leader 
+election, complicating deployments.
+
+\xxx addresses this challenge with a simple, clean design. It runs leader 
+election on the normal-case consensus log and QP. In normal case, the 
+leader does WRITEs to remote logs as heartbeats with a period of T. Each 
+consensus log maintains an \v{elect[MAX]} array, one array
+element for each replica. This \v{elect} array is only used in leader election. 
+Once backups miss heartbeats from the leader for 3*T, they suspect the leader 
+to fail, close the leader's QPs, and start to work on the \v{elect} array to 
+elect a new leader.
+
+Backups use a standard \paxos leader election algorithm~\cite{paxos:practical} 
+with three steps. Each backup writes to its own \v{elect} element indexed by 
+its replica ID on other replicas' \v{elect}. First, each backup waits for a 
+random time (similar to random election timeouts in Raft~\cite{raft:usenix14}), 
+and it proposes a new view with a standard two-round 
+\paxos consensus~\cite{paxos:simple} by including both its view and the index 
+of its latest log entry. The other backups also propose their views and poll on 
+this \v{elect} array in order to agree on an earlier proposal or confirm itself 
+as the winner. The backup with a more up-to-date log will win the proposal. A 
+log is more up-to-date if its latest entry has either a higher view or the same 
+view but a higher index.
+
+Second, the winner proposes itself as a leader candidate using this \v{elect}
+array. Third, after the second step reaches a quorum, the new leader notifies 
+remote replicas itself as the new leader and it starts to WRITE periodic 
+heartbeats. Overall, \xxx safely avoids multiple ``leaders" to corrupt 
+consensus logs, because only one leader is elected in each view, and backups 
+always close an outdated leader's QPs before electing a new leader. For 
+robustness, the above three steps are inherited from a practical \paxos 
+election algorithm~\cite{paxos:practical}, but \xxx makes the election 
+efficient and simple in an RDMA domain.
