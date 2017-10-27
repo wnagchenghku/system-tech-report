@@ -347,20 +347,13 @@ pdfdisplaydoctitle=true,
 % \end{sloppypar}
 
 \begin{sloppypar}
+We present \xxx, a fault tolerance system that can efficiently replicate 
+unmodified server programs.
+\end{sloppypar}
 
-\xxx deployment is similar to a typical \smr's: it runs a server program on 
-replicas within a datacenter. Replicas connect with each other using RDMA QPs. 
-Client programs located in LAN or WAN.
-
-
-\begin{figure*}[ht]
-\begin{center}
-\includegraphics{figures/arch}
-\caption{\em \xxx Architecture (key components are in
-  blue).}\label{fig:arch}
-\end{center}
-\end{figure*}
-
+\begin{sloppypar}
+\input{arch}
+\input{protocol}
 \end{sloppypar}
 
 % uncomment to tweak with bib spacing
