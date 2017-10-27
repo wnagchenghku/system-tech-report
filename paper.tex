@@ -93,7 +93,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     macro
 
-\newcommand{\xxx}[0]{\textsc{Crane}\xspace}
+\newcommand{\xxx}[0]{\textsc{APUS}\xspace}
 \newcommand{\paxos}[0]{\textsc{Paxos}\xspace}
 \newcommand{\mytitle}[0]{\textbf {System Technical Report}}
 \newcommand{\mykeywords}[0]{State Machine Replication, Fault Tolerance, Stable 
@@ -348,11 +348,16 @@ pdfdisplaydoctitle=true,
 
 \begin{sloppypar}
 
+\xxx deployment is similar to a typical \smr's: it runs a server program on 
+replicas within a datacenter. Replicas connect with each other using RDMA QPs. 
+Client programs located in LAN or WAN.
 
 
 \begin{figure*}[ht]
 \begin{center}
-\caption{.}\label{fig:compare}
+\includegraphics{figures/arch}
+\caption{\em \xxx Architecture (key components are in
+  blue).}\label{fig:arch}
 \end{center}
 \end{figure*}
 
