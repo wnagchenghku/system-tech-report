@@ -12,9 +12,7 @@ requests. The \xxx leader enables the first and second elements, and backups
 enable the first and third elements.
 
 \begin{figure}[h]
-\begin{minipage}{3in}
-\lgrindfile{code/logentry.cpp}
-\end{minipage}
+\lgrindfile{code/logentry.cpp.tex}
 \caption{{\em \xxx's log entry for each socket call.}}
 \label{fig:logentry}
 \end{figure}
@@ -24,17 +22,12 @@ log. Most fields are the same as those in a typical \paxos
 protocol~\cite{paxos:practical} except three: the \v{reply} array, 
 \v{conn\_vs}, and \v{call\_type}. 
 The \v{reply} array is a piece of memory on the leader side, preserved for
-backups to do RDMA WRITEs for their consensus replies. 
-%is for backups to do RDMA WRITEs for their 
-%consensus replies on the leader. 
+backups to do RDMA WRITEs for their consensus replies.
 The \v{conn\_vs} is for identifying
 which TCP connection this socket call belongs to (see \S\ref{sec:concurrent}). 
 The \v{call\_type} identifies different types of socket calls (\eg, the \accept 
 type and the \recv type) for the entry.
 
-% Second, leader thread behavior on \recv(). Return from orig recv, grab 
-% spin % lock and get view stamp, store the log, and post send to all replicas. 
-% Non blocking. Wait % for over half agree, and then execute the operation.
 Figure~\ref{fig:consensus} shows \xxx's consensus protocol. Suppose a leader 
 thread invokes a consensus request when it calls a socket call \recv. This 
 thread's consensus request has four steps. The first step (\textbf{L1}, not 
@@ -49,9 +42,7 @@ ID~\cite{paxos:practical})
 for this entry in the consensus log, allocating a distinct entry in the log, 
 and 
 storing the entry to a local storage. We denote the time 
-taken on storing an entry as $t_{SSD}$. 
-% without allowing gaps (\ig, newer 
-% entries reach consensus but ).
+taken on storing an entry as $t_{SSD}$.
 
 Third, each leader thread concurrently invokes a consensus via the third step 
 (\textbf{L3}): WRITE the log entry to remote backups. This step is thread-safe 
@@ -106,7 +97,6 @@ missing entries.
 
 \subsection{Atomic Message Delivery} \label{sec:atomic}
 
-% One key issue, check integrity. Strawmen approach, check viewstamp first.
 On a backup side, one tricky challenge is that atomicity must be 
 ensured on the leader's RDMA WRITEs on all entries and backups' polls. For 
 instance, while a leader thread is doing a WRITE on \v{vs} to a remote backup, 
