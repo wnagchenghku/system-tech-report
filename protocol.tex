@@ -120,7 +120,7 @@ primitives are much slower than normal RDMA WRITEs and local memory reads.
 the \v{data} array. A backup thread always first checks the canary value 
 according to \v{data\_size} and then starts a standard \paxos consensus 
 reply decision~\cite{paxos:practical}. This synchronization-free approach 
-ensures that a \xxx backup thread always reads a complete entry efficiently.
+ensures that a backup thread always reads a complete entry efficiently.
 
 \subsection{Handling Concurrent Connections} \label{sec:concurrent}
 
