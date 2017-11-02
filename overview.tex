@@ -1,4 +1,14 @@
-\section{Architecture} \label{sec:arch}
+\section{Overview} \label{sec:overview}
+
+We present \xxx, an RDMA-based fault tolerance system that can efficiently 
+replicate unmodified server programs. \xxx intercepts an unmodified server 
+program's inbound socket calls (\eg, \recv), assigns a total order for all 
+received requests in all connections, and uses fast RDMA primitives to invoke 
+consensus on these requests concurrently. To ensure the same robustness as 
+regular \paxos, \xxx's runtime system efficiently tackles several reliability 
+challenges such as atomic delivery of messages (\S\ref{sec:atomic}).
+
+\subsection{Architecture} \label{sec:arch}
 
 \xxx deployment is similar to a typical State Machine Replication (\smr) 
 system: it runs a server program on replicas within a datacenter. Replicas 

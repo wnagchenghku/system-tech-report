@@ -196,6 +196,7 @@ pdfdisplaydoctitle=true,
 \newcommand{\mysql}{\v{MySQL}\xspace}
 \newcommand{\sysbench}{\v{SysBench}\xspace}
 \newcommand{\zookeeper}{\v{ZooKeeper}\xspace}
+\newcommand{\dare}{\v{DARE}\xspace}
 
 
 \newcommand{\aget}[0]{\v{aget}\xspace}
@@ -348,18 +349,8 @@ pdfdisplaydoctitle=true,
 % \end{sloppypar}
 
 \begin{sloppypar}
-We present \xxx, an RDMA-based fault tolerance system that can efficiently 
-replicate unmodified server programs. \xxx intercepts an unmodified server 
-program's inbound socket calls (\eg, \recv), assigns a total order for all 
-received requests in all connections, and uses fast RDMA primitives to invoke 
-consensus on these requests concurrently. To ensure the same robustness as 
-regular \paxos, \xxx's runtime system efficiently tackles several reliability 
-challenges such as atomic delivery of messages (\S\ref{sec:atomic}).
-
-\end{sloppypar}
-
-\begin{sloppypar}
-\input{arch}
+\input{background}
+\input{overview}
 \input{protocol}
 \end{sloppypar}
 

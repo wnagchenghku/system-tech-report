@@ -1,0 +1,45 @@
+\section{Background}\label{sec:background}
+
+\subsection{RDMA}\label{sec:rdma}
+Existing \paxos protocols suffer from high, scale-limited consensus latency. OS 
+kernels, a major source of this problem, can be bypassed with advanced network 
+features such as Remote Direct Memory Access (RDMA) within the same datacenter.
+
+RDMA is a kernel-bypassing technique that offers ultra low latency and high 
+throughput. As the prices decrease, RDMA architectures (\eg, 
+Infiniband~\cite{infiniband} and RoCE~\cite{roce}) have become common within a 
+datacenter.
+
+RDMA has three operation types, from fast to slow: one-sided 
+read/write operations, two sided send/recv operations. An one-sided RDMA write 
+can directly write from one replica's memory to a remote replica's memory 
+without involving the remote OS kernel or CPU. Prior work~\cite{pilaf:usenix14} 
+shows that one-sided operations are up to 2X faster than two-sided 
+operations~\cite{fasst:osdi16}, so \xxx uses one-sided operations (or ``WRITE" 
+in this report). On a WRITE success, the remote NIC (network interface card) 
+sends an RDMA ACK to local NIC.
+
+An one-sided RDMA communication between a local and a remote NIC has
+a Queue Pair (QP), including a send queue and a receive 
+queue. Such a QP is a global data structure between every two replicas, but 
+pushing a message into a local QP takes at most 0.2 \us in our evaluation. 
+Different QPs between different replicas work in parallel (leveraged by \xxx in 
+\S\ref{sec:normal}). Each QP has a Completion Queue (CQ) to store ACKs. A QP 
+belongs to a type of ``XY": X can be R (reliable) or U (unreliable), and Y can 
+be C (connected) or U (unconnected). HERD~\cite{herd:sigcomm14} shows that 
+WRITEs on RC and UC OPs incur almost the same latency, so \xxx uses RC QPs.
+
+Normally, to ensure a WRITE resides in remote memory, the local replica 
+busily polls an ACK from the CQ before it proceeds 
+(or \emph{signaling}). Polling ACK is time consuming as it involves 
+synchronization between the NICs on both sides of a CQ. We looked into the ACK 
+pollings in a recent RDMA-based consensus protocol \dare~\cite{dare:hpdc15}.
+We found that, although it is highly optimized (its leader maintains one 
+global CQ to receive all backups' ACKs in batches), busily polling ACKs slowed 
+\dare down: when the CQ was empty, each poll took 0.039$\sim$0.12 \us; when the 
+CQ has one or more ACKs, each poll took 0.051$\sim$0.42 \us.
+
+Fortunately, depending on protocol logic, one can do \emph{selective 
+signaling}~\cite{herd:sigcomm14}: it only checks for an ACK after pushing a 
+number of WRITEs. Because \xxx's protocol logic does not rely on RDMA ACKs, 
+it just occasionally invokes selective signaling to clean up ACKs.
