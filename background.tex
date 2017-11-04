@@ -1,6 +1,5 @@
-\section{Background}\label{sec:background}
+\section{Background on RDMA}\label{sec:background}
 
-\subsection{RDMA}\label{sec:rdma}
 Existing \paxos protocols suffer from high, scale-limited consensus latency. OS 
 kernels, a major source of this problem, can be bypassed with advanced network 
 features such as Remote Direct Memory Access (RDMA) within the same datacenter.
@@ -19,7 +18,7 @@ operations~\cite{fasst:osdi16}, so \xxx uses one-sided operations (or ``WRITE"
 in this report). On a WRITE success, the remote NIC (network interface card) 
 sends an RDMA ACK to local NIC.
 
-An one-sided RDMA communication between a local and a remote NIC has
+A one-sided RDMA communication between a local and a remote NIC has
 a Queue Pair (QP), including a send queue and a receive 
 queue. Such a QP is a global data structure between every two replicas, but 
 pushing a message into a local QP takes at most 0.2 \us in our evaluation. 
@@ -27,7 +26,7 @@ Different QPs between different replicas work in parallel (leveraged by \xxx in
 \S\ref{sec:normal}). Each QP has a Completion Queue (CQ) to store ACKs. A QP 
 belongs to a type of ``XY": X can be R (reliable) or U (unreliable), and Y can 
 be C (connected) or U (unconnected). HERD~\cite{herd:sigcomm14} shows that 
-WRITEs on RC and UC OPs incur almost the same latency, so \xxx uses RC QPs.
+WRITEs on RC and UC QPs incur almost the same latency, so \xxx uses RC QPs.
 
 Normally, to ensure a WRITE resides in remote memory, the local replica 
 busily polls an ACK from the CQ before it proceeds 
