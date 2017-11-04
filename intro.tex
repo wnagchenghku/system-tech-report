@@ -1,0 +1,13 @@
+\section{Introduction} \label{sec:intro}
+Existing \paxos protocols suffer from high, scale-limited consensus latency. OS 
+kernel, a major source of this problem, can be bypassed with advanced network 
+features such as Remote Direct Memory Access (RDMA) within the same datacenter.
+
+In this report, we present \xxx, an RDMA-based \paxos protocol and its runtime 
+system that can efficiently provide fault tolerance to unmodified server 
+programs. \xxx intercepts an unmodified server program's inbound socket calls 
+(\eg, \recv), assigns a total order for all received requests in all 
+connections, and uses fast RDMA primitives to invoke consensus on these requests 
+concurrently. To ensure the same robustness as regular \paxos, \xxx's runtime 
+system efficiently tackles several reliability challenges such as atomic 
+delivery of messages (\S\ref{sec:atomic}).

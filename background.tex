@@ -1,9 +1,5 @@
 \section{Background on RDMA}\label{sec:background}
 
-Existing \paxos protocols suffer from high, scale-limited consensus latency. OS 
-kernels, a major source of this problem, can be bypassed with advanced network 
-features such as Remote Direct Memory Access (RDMA) within the same datacenter.
-
 RDMA is a kernel-bypassing technique that offers ultra low latency and high 
 throughput. As the prices decrease, RDMA architectures (\eg, 
 Infiniband~\cite{infiniband} and RoCE~\cite{roce}) have become common within a 
