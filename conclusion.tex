@@ -4,10 +4,11 @@
 server programs. In this report, we have demonstrated the following properties 
 of \xxx.
 
-\textbf{Novel.} \xxx's runtime system provides transparent replication, uses 
-fast RDMA primities to invoke consensus processes on requests concurrently 
-(\S\ref{sec:concurrent}), handles atomic delivery of RDMA messages 
-(\S\ref{sec:atomic}), etc. All these features make \xxx a novel RDMA-based 
+\textbf{Novel.} \xxx's runtime system uses \emph{fast} RDMA primitives to 
+invoke consensus processes on requests \emph{concurrently} 
+(\S\ref{sec:concurrent}). Besides, it addresses several practical issues 
+including \emph{atomic} delivery of RDMA messages (\S\ref{sec:atomic}) and  
+\emph{transparent} replication. All these features make \xxx a novel RDMA-based 
 \paxos system.
 
 \textbf{Practical applicable.} Our initial results in Section 
@@ -18,6 +19,7 @@ intervention. Compared with \nprog server programs' unreplicated executions,
 throughput. Its consensus latency outperformed four traditional consensus 
 protocols by at least \comptradlow and faster than a recent RDMA-based consensus 
 protocol \dare by \fasterDARE in average. This consensus latency stayed almost 
-constant  to the number of replicas and concurrent requests. Besides, Section 
-(\S\ref{sec:vm-integration}) indicates that \xxx has the potential to greatly 
-improve the reliability of other applications (\eg, virtual machine) as well.
+constant  to the number of replicas and concurrent requests. Furthermore, 
+Section (\S\ref{sec:vm-integration}) indicates that \xxx has the potential to 
+greatly improve the reliability of other applications (\eg, virtual machine) as 
+well.
