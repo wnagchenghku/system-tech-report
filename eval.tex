@@ -11,7 +11,8 @@ connected with RoCE~\cite{roce}.
 
 We compared \xxx with five open source consensus protocols, including four 
 traditional ones (\libpaxos~\cite{libpaxos}, \zookeeper~\cite{zookeeper}, 
-\crane~\cite{crane:sosp15} and \spaxos~\cite{spaxos:srds12}).
+\crane~\cite{crane:sosp15} and \spaxos~\cite{spaxos:srds12}) and an RDMA-based 
+one (\dare~\cite{dare:hpdc15}).
 
 We evaluated \xxx on \nprog widely used or studied programs, including
 \nkvprog key-value stores \redis, \memcached, \ssdb, \mongodb; \mysql, a SQL
@@ -47,6 +48,32 @@ when the batch is full. More replicas can take shorter time to form a batch, so
 \spaxos incurred a slightly better consensus latency with more replicas. 
 Nevertheless, its latency was always over 600 \us. \xxx's consensus latency 
 outperforms these four protocols by at least \comptradlow.
+
+\subsection{Comparing with \dare}
+\label{sec:eval-dare}
+Because \dare only supported a key-value server written by the 
+authors, we ran \xxx with \redis, a popular key-value server for comparison.
+Figure~\ref{fig:compare} shows \xxx and 
+\dare's consensus latency on variant concurrent connections. Both \xxx and 
+\dare ran seven replicas with randomly arriving, update-heavy (50\% SET 
+and 50\% GET) and read-heavy (10\% SET and 90\% GET) workloads. \dare 
+performance on two workloads were different because it handles GETs with only 
+one consensus round~\cite{dare:hpdc15}. \xxx handles all requests with the same 
+protocol. When there was only one connection, \dare achieved the lowest 
+consensus latency we have seen in prior work because it is a sole-leader 
+protocol. On variant connections, \xxx's average 
+consensus latency was faster than \dare by \fasterDARE.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=3in]{figures/server-processing-compare}
+\caption{{\em \xxx and \dare consensus latency (divided into two parts) on 
+variant connections.} 
+``Wait-consensus" is the time an input request spent on waiting consensus to 
+start. ``Actual-consensus" is the time spent on running consensus.}
+\label{fig:compare}
+\end{center}
+\end{figure}
 
 \subsection{Performance Overhead} \label{sec:overhead}
 
