@@ -11,15 +11,14 @@ including \emph{atomic} delivery of RDMA messages (\S\ref{sec:atomic}) and
 \emph{transparent} replication. All these features make \xxx a novel RDMA-based 
 \paxos protocol.
 
-\textbf{Applicable.} Our initial results in Section 
-(\S\ref{sec:evaluation}) show that \xxx can provide fault tolerance to server 
-programs with low performance overhead without requiring server developers' 
-intervention. Compared with \nprog server programs' unreplicated executions, 
-\xxx incurred \latencyoverhead overhead in response time and \tputoverhead in 
-throughput. Its consensus latency outperformed four traditional consensus 
-protocols by at least \comptradlow and faster than a recent RDMA-based consensus 
-protocol \dare by \fasterDARE in average. This consensus latency stayed almost 
-constant  to the number of replicas and concurrent requests. Furthermore, 
-Section (\S\ref{sec:vm-integration}) indicates that \xxx has the potential to 
-greatly improve the reliability of other applications (\eg, virtual machine) as 
-well.
+\textbf{Applicable.} Our initial results show that \xxx can provide fault 
+tolerance to server programs with low performance overhead without requiring 
+server developers' intervention (\S\ref{sec:evaluation}). Compared with \nprog 
+server programs' unreplicated executions, \xxx incurred \latencyoverhead 
+overhead in response time and \tputoverhead in throughput. Its consensus 
+latency outperformed four traditional consensus protocols by at least 
+\comptradlow and faster than a recent RDMA-based consensus protocol \dare by 
+\fasterDARE in average. This consensus latency stayed almost constant  to the 
+number of replicas and concurrent requests. Furthermore, the integration of 
+\xxx into virtual machine (\S\ref{sec:vm-integration}) indicates it has the 
+potential to greatly improve the reliability of other applications as well.
