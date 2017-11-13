@@ -4,14 +4,14 @@
 server programs. In this report, we have demonstrated the following properties 
 of \xxx.
 
-\textbf{Novel.} \xxx's runtime system uses \emph{fast} RDMA primitives to 
+\textbf{Novelty.} \xxx's runtime system uses \emph{fast} RDMA primitives to 
 invoke consensus processes on requests \emph{concurrently} 
 (\S\ref{sec:concurrent}). Besides, it addresses several practical issues 
 including \emph{atomic} delivery of RDMA messages (\S\ref{sec:atomic}) and  
 \emph{transparent} replication. All these features make \xxx a novel RDMA-based 
 \paxos protocol.
 
-\textbf{Applicable.} Our initial results show that \xxx can provide fault 
+\textbf{Practicability.} Our initial results show that \xxx can provide fault 
 tolerance to server programs with low performance overhead without requiring 
 server developers' intervention (\S\ref{sec:evaluation}). Compared with \nprog 
 server programs' unreplicated executions, \xxx incurred \latencyoverhead 
@@ -22,3 +22,10 @@ latency outperformed four traditional consensus protocols by at least
 number of replicas and concurrent requests. Furthermore, our integration of 
 \xxx and virtual machine greatly improves the virtual machine's reliability 
 (\S\ref{sec:vm-integration}), indicating \xxx has broad applications.
+
+\textbf{Patent Protectability.} \xxx's carefully-designed consensus protocol 
+uses fast RDMA primitives to invoke consensus processes concurrently and takes 
+one round trip in the normal case, which is almost the most optimal performance 
+in the context of RDMA-based \paxos protocols. Therefore, if a technique which 
+also uses RDMA to build \paxos, it is nearly impossible for it be as fast 
+and scalable as \xxx without leverages \xxx's mechanism.
