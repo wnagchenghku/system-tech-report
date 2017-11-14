@@ -48,17 +48,14 @@ it uses RDMA to efficiently compare page hashes across replicas.
 efficient determination of slot boundary and concurrent 
 computation of dirty page hashes.
 
-Similar to primary-backup for ensuring external consistency, \xxx leader must 
+Similar to primary-backup for ensuring external consistency, \yyy leader must 
 buffer all outbound packets before a synchronization operation succeeds, 
 including client responses and TCP ACKs. Client programs will stop sending new 
 packets when their TCP congestion windows are met, even server programs have 
 finished processing requests and become idle. This leads to unnecessary time 
-slots. In practical workloads with concurrent connections, arrival times of 
-requests are often unpredictable, thus a static synchronization time slot 
-configuration (\eg, 25\ms in \remus and 100\ms in \qemumc) can often cause 
-an idle service and unnecessary time slots. To avoid unnecessary time slots, 
-\xxx develops an adaptive-slot algorithm by inserting synchronization operations 
-when its leader determines idle status of programs running in guest VM.
+slots. To avoid this, \yyy develops an adaptive-slot algorithm by inserting 
+synchronization operations when its leader determines idle status of programs 
+running in guest VM.
 
 We also leveraged multi-core hardware and implemented a multi-threaded dirty 
 page hash computing mechanism. The mechanism detects the number of CPU cores on 
