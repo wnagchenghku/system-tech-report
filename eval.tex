@@ -105,20 +105,3 @@ programs' unreplicated executions got a performance improvement except
 \memcached. Prior work~\cite{rex:eurosys14} also showed that
 \memcached itself scaled poorly. Overall, \xxx scaled as well as unreplicated 
 executions on concurrent requests.
-
-\subsection{Integrating \xxx into virtual machine} \label{sec:vm-integration}
-Virtual machines usually use a primary-backup architecture for fault 
-tolerance~\cite{alsberg1976principle}. However, primary-backup approach is 
-notorious for the ``split-brain'' problem~\cite{scales2010design}, which can be 
-avoided in \paxos. One reason for fault tolerant VMs to use 
-primary-backup replication instead of \paxos protocol is that traditional \paxos 
-systems incur high performance overhead. Specifically, every 
-request received by the virtual machine must go through the traditional \paxos 
-systems to reach consensus first, which takes hundreds of microseconds, and then 
-be processed by the server programs. This high consensus latency severely 
-degrades the performance of the applications running inside.
-
-By integrating the fast \xxx \paxos protocol into virtual machine, we 
-efficiently mitigate the ``split-brain'' problem caused by the primary-backup 
-approach. We implemented the prototype on KVM QEMU hypervisor and it took fewer 
-than ten lines of code by leveraging the simple API provided by \xxx.
