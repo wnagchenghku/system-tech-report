@@ -1,5 +1,5 @@
 \section{Current Status of \xxx and \yyy} \label{sec:status}
-We have studied the state-of-the-art consensus protocols and summarized 
+We have studied state-of-the-art consensus protocols and summarized 
 three main issues of them on providing efficient fault tolerance to 
 general server programs. Based on our analysis, we proposed \xxx, an RDMA-based 
 \paxos system that can efficiently replicate unmodified server programs.
@@ -10,19 +10,28 @@ more robust.
 So far, we have come up with a complete system design of \xxx, including the 
 normal case, leader election, and failure recovery protocol. We have 
 implemented the normal case protocol of \xxx (\S\ref{sec:normal}) and collected 
-initial evaluation results (\S\ref{sec:evaluation}). We will continue to 
-implement the failure handling protocols (\ie, leader election and failure 
-recovery) and test the performance and robustness. Besides, we 
-will finish the development of several optimization mechanisms like transparent 
-replication. An academic paper on \xxx has already been published 
+initial evaluation results (\S\ref{sec:evaluation}). Our initial results show 
+that compared with \nprog server programs' unreplicated executions, \xxx 
+incurred \latencyoverhead overhead in response time and \tputoverhead in 
+throughput. Its consensus latency outperformed four traditional consensus 
+protocols by at least \comptradlow and faster than a recent RDMA-based 
+consensus protocol \dare by \fasterDARE in average. This consensus latency 
+stayed almost constant to the number of replicas and concurrent requests.
+We will continue to implement the failure handling protocols (\ie, leader 
+election and failure recovery) and test the performance and robustness. 
+Besides, we will finish the development of several optimization mechanisms like 
+transparent replication. An academic paper on \xxx has already been published 
 at ACM Symposium on Cloud Computing 2017 (SoCC 2017).
 
 Until now, we have brought up with a complete system design of \yyy and 
-proposed several optimizations for improving the 
-performance (\S\ref{sec:vm-integration}). For implementation, we have integrated 
+proposed several optimizations for improving the performance 
+(\S\ref{sec:vm-integration}). For implementation, we have integrated 
 \xxx into \kvm QEMU and finished developing the normal synchronization protocol 
-and collected initial evaluation results. We will continue to implement the 
-failure handling protocol and measure the performance of our 
-optimization techniques. We have published an academic paper about a novel disk 
-replication design in \yyy at 23th IEEE International Conference on Parallel 
-and Distributed Systems (ICPADS 2017).
+and collected initial evaluation results. Our initial results show that \yyy's 
+throughput is \avgtput higher than two popular VM fault-tolerance systems on 
+4-vCPU VMs, \avgsixteen higher on 16-vCPU VMs. Meanwhile, \yyy consumes 
+\avgbandwidth less network bandwidth than both of them on average.
+We will continue to implement the failure handling protocol and measure the 
+performance of our optimization techniques. We have published an academic paper 
+about a novel disk replication design in \yyy at 23th IEEE International 
+Conference on Parallel and Distributed Systems (ICPADS 2017).
